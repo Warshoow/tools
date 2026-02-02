@@ -1,23 +1,18 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import ollama
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 import os
 import json
-import re
 
 app = FastAPI()
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://host.docker.internal:11434")
-MODEL = os.getenv("MODEL", "deepseek-r1:7b")
+MODEL = os.getenv("MODEL", "llama3.1:8b")
 
 class ChatRequest(BaseModel):
     message: str
     model: str = None
-
-class ToolCall(BaseModel):
-    name: str
-    arguments: dict
 
 def web_search(query: str, max_results: int = 5):
     """Outil MCP de recherche web"""
@@ -37,24 +32,23 @@ def web_search(query: str, max_results: int = 5):
     except Exception as e:
         return {"error": str(e)}
 
-# Définition des outils MCP
+# Outils pour Ollama native tool calling
 TOOLS = [
     {
         "type": "function",
         "function": {
             "name": "web_search",
-            "description": "Recherche des informations actuelles sur le web. Utilise cet outil quand tu as besoin d'informations récentes ou que tu ne connais pas.",
+            "description": "Search the web for current information. Use this when you need recent data or don't know the answer.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "La requête de recherche"
+                        "description": "The search query"
                     },
                     "max_results": {
                         "type": "integer",
-                        "description": "Nombre maximum de résultats (défaut: 5)",
-                        "default": 5
+                        "description": "Maximum number of results (default: 5)"
                     }
                 },
                 "required": ["query"]
@@ -63,30 +57,9 @@ TOOLS = [
     }
 ]
 
-SYSTEM_PROMPT = """Tu es un assistant avec accès a un outil de recherche web.
-
-Quand tu as besoin d'informations actuelles ou recentes, tu DOIS utiliser l'outil en repondant UNIQUEMENT avec ce format JSON:
-{"tool": "web_search", "query": "ta recherche ici"}
-
-Exemples:
-- Pour la meteo: {"tool": "web_search", "query": "meteo Paris aujourd'hui"}
-- Pour des news: {"tool": "web_search", "query": "actualites France"}
-
-Si tu n'as pas besoin de recherche, reponds normalement sans JSON."""
-
-def extract_tool_call(text: str):
-    """Extrait un appel d'outil du texte du modele"""
-    # Cherche un bloc JSON dans la reponse
-    json_pattern = r'\{[^{}]*"tool"\s*:\s*"web_search"[^{}]*\}'
-    match = re.search(json_pattern, text)
-    if match:
-        try:
-            data = json.loads(match.group())
-            if data.get('tool') == 'web_search' and data.get('query'):
-                return data
-        except json.JSONDecodeError:
-            pass
-    return None
+SYSTEM_PROMPT = """You are a helpful assistant with access to web search.
+Use the web_search tool when you need current information or don't know the answer.
+After receiving search results, provide a clear answer based on those results."""
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
@@ -99,32 +72,53 @@ async def chat(request: ChatRequest):
             {"role": "user", "content": request.message}
         ]
 
-        max_iterations = 10
+        max_iterations = 5
+        searched_queries = set()
+
         for i in range(max_iterations):
-            response = client.chat(model=model, messages=messages)
-            assistant_content = response['message'].get('content', '')
+            # Call with native tools support
+            response = client.chat(
+                model=model,
+                messages=messages,
+                tools=TOOLS
+            )
 
-            # Detecter un appel d'outil dans la reponse
-            tool_call = extract_tool_call(assistant_content)
+            message = response['message']
+            tool_calls = message.get('tool_calls', [])
 
-            if not tool_call:
-                # Pas d'outil, reponse finale
+            # No tool calls = final response
+            if not tool_calls:
                 return {
-                    "response": assistant_content,
+                    "response": message.get('content', ''),
                     "iterations": i + 1
                 }
 
-            # Executer la recherche
-            query = tool_call['query']
-            print(f"Recherche: {query}")
-            result = web_search(query=query)
+            # Process tool calls
+            messages.append(message)
 
-            # Ajouter au contexte et continuer
-            messages.append({"role": "assistant", "content": assistant_content})
-            messages.append({
-                "role": "user",
-                "content": f"Resultats de recherche:\n{json.dumps(result, ensure_ascii=False, indent=2)}\n\nUtilise ces resultats pour repondre a la question initiale."
-            })
+            for tool_call in tool_calls:
+                func_name = tool_call['function']['name']
+                args = tool_call['function']['arguments']
+
+                if func_name == 'web_search':
+                    query = args.get('query', '')
+                    max_results = args.get('max_results', 5)
+
+                    print(f"Recherche: {query}")
+
+                    # Skip duplicate searches
+                    if query.lower().strip() in searched_queries:
+                        print(f"Duplicate search skipped: {query}")
+                        result = {"note": "Already searched, use previous results"}
+                    else:
+                        searched_queries.add(query.lower().strip())
+                        result = web_search(query=query, max_results=max_results)
+
+                    # Add tool response
+                    messages.append({
+                        "role": "tool",
+                        "content": json.dumps(result, ensure_ascii=False)
+                    })
 
         return {"response": "Maximum iterations reached", "iterations": max_iterations}
 
@@ -137,7 +131,6 @@ async def health():
     try:
         client = ollama.Client(host=OLLAMA_HOST)
         models = client.list()
-        # Ollama returns 'models' list with 'model' key (not 'name')
         model_list = models.get('models', [])
         available = [m.get('model') or m.get('name', 'unknown') for m in model_list]
         return {
