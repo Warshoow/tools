@@ -99,7 +99,7 @@ async def chat(request: ChatRequest):
             {"role": "user", "content": request.message}
         ]
 
-        max_iterations = 3
+        max_iterations = 10
         for i in range(max_iterations):
             response = client.chat(model=model, messages=messages)
             assistant_content = response['message'].get('content', '')
