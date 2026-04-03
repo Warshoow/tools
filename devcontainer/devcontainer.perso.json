@@ -1,0 +1,17 @@
+{
+  "name": "${localWorkspaceFolderBasename} (Perso)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "postCreateCommand": "curl -fsSL https://claude.ai/install.sh | bash",
+  "mounts": [
+    "source=${localEnv:HOME}/.claude-perso,target=/home/joffrey_guilmeau/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/joffrey_guilmeau/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/home/joffrey_guilmeau/.ssh,type=bind,consistency=cached,readonly"
+  ],
+  "remoteEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/joffrey_guilmeau/.claude"
+  }
+}

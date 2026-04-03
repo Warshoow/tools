@@ -1,0 +1,36 @@
+{
+  "name": "${localWorkspaceFolderBasename} (Pro)",
+  "dockerComposeFile": "../docker-compose.dev.yaml",
+  "service": "app-dev",
+  "workspaceFolder": "/app",
+  // "features": {
+  //   "ghcr.io/devcontainers/features/git:1": {}
+  // },
+  "postCreateCommand": "bash .devcontainer/setup-dev.sh",
+  "mounts": [
+    "source=${localEnv:HOME}/.claude-pro,target=/root/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly"
+  ],
+  "remoteEnv": {
+    "CLAUDE_CONFIG_DIR": "/root/.claude"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "jripouteau.adonis-vscode-extension",
+        "luongnd.edge",
+        "ms-vscode.vscode-typescript-next",
+        "dsznajder.es7-react-js-snippets",
+        "formulahendry.auto-rename-tag",
+        "ckolkman.vscode-postgres",
+        "Stripe.vscode-stripe",
+        "ms-azuretools.vscode-docker",
+        "anthropic.claude-code"
+      ]
+    }
+  }
+}
