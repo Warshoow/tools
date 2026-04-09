@@ -2,7 +2,7 @@
 FROM node:22-alpine
 
 # Alpine n'a pas bash par défaut, requis par les devcontainer features et Claude Code
-RUN apk add --no-cache bash curl git openssh-client
+RUN apk add --no-cache bash curl git openssh-client docker-cli docker-compose
 
 # Set working directory inside the container
 WORKDIR /app
