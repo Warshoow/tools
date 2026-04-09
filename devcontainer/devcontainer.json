@@ -10,7 +10,9 @@
   "mounts": [
     "source=${localEnv:HOME}/.claude-pro,target=/root/.claude,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly"
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly",
+    "source=${localEnv:HOME}/.local/bin/grab,target=/usr/local/bin/grab,type=bind,consistency=cached,readonly",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "remoteEnv": {
     "CLAUDE_CONFIG_DIR": "/root/.claude"
