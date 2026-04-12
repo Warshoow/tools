@@ -12,8 +12,8 @@ fi
 
 mkdir -p "$TARGET_DIR"
 cp "${GRAB_TOOL_DIR}/devcontainer.json" "$TARGET_DIR/devcontainer.json"
-cp "${GRAB_TOOL_DIR}/Dockerfile.dev"    "$TARGET_DIR/Dockerfile.dev"
-cp "${GRAB_TOOL_DIR}/docker-compose.dev.yml" "$TARGET_DIR/docker-compose.dev.yml"
+cp "${GRAB_TOOL_DIR}/Dockerfile.dev"    "$GRAB_PROJECT_DIR/Dockerfile.dev"
+cp "${GRAB_TOOL_DIR}/docker-compose.dev.yml" "$GRAB_PROJECT_DIR/docker-compose.dev.yml"
 cp "${GRAB_TOOL_DIR}/setup-dev.sh"      "$TARGET_DIR/setup-dev.sh"
 chmod +x "$TARGET_DIR/setup-dev.sh"
 
