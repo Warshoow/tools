@@ -1,7 +1,7 @@
 {
   "name": "${localWorkspaceFolderBasename} (Pro)",
-  "dockerComposeFile": "../docker-compose.dev.yaml",
-  "service": "app-dev",
+  "dockerComposeFile": "../docker-compose.dev.yml",
+  "service": "app",
   "workspaceFolder": "/app",
   // "features": {
   //   "ghcr.io/devcontainers/features/git:1": {}
