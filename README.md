@@ -1,7 +1,7 @@
 # tools
 
 Personal monorepo of shareable tools, designed to be cherry-picked into any project with
-[`grab`](https://github.com/Warshoow/grab).
+[`grab`](https://github.com/Warshoow/grab-cli).
 
 Each tool lives in its own top-level directory and follows the grab layout:
 
