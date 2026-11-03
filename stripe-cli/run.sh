@@ -30,16 +30,19 @@ fi
 
 HOST="${HOST:-host.docker.internal}"
 PORT="${PORT:-3333}"
+WEBHOOK_PATH="${WEBHOOK_PATH:-/webhooks/stripe}"
+# -it only from a terminal: scripts and agents have no TTY.
+TTY=(); [[ -t 0 && -t 1 ]] && TTY=(-it)
 
 cmd="${1:-listen}"
 [[ $# -gt 0 ]] && shift
 
 case "$cmd" in
     listen)
-        FORWARD="http://${HOST}:${PORT}/webhooks/stripe"
+        FORWARD="http://${HOST}:${PORT}${WEBHOOK_PATH}"
         echo "→ Forwarding Stripe webhooks to ${FORWARD}" >&2
         echo "  (copy the printed whsec_… into your app's STRIPE_WEBHOOK_SECRET)" >&2
-        exec docker run --rm -it "$IMAGE" \
+        exec docker run --rm "${TTY[@]}" "$IMAGE" \
             listen --api-key "$STRIPE_API_KEY" \
             --forward-to "$FORWARD" \
             ${APP_DOMAIN:+--headers "Host:${APP_DOMAIN}"} \
@@ -49,11 +52,11 @@ case "$cmd" in
         event="${1:-payment_intent.succeeded}"
         [[ $# -gt 0 ]] && shift
         echo "→ Triggering ${event}" >&2
-        exec docker run --rm -it "$IMAGE" \
+        exec docker run --rm "${TTY[@]}" "$IMAGE" \
             trigger "$event" --api-key "$STRIPE_API_KEY" "$@"
         ;;
     *)
         # Passthrough for any other stripe subcommand (logs, fixtures, ...).
-        exec docker run --rm -it "$IMAGE" "$cmd" --api-key "$STRIPE_API_KEY" "$@"
+        exec docker run --rm "${TTY[@]}" "$IMAGE" "$cmd" --api-key "$STRIPE_API_KEY" "$@"
         ;;
 esac
