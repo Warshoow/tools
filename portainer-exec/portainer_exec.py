@@ -1,4 +1,4 @@
-import base64, json, os, re, ssl, struct, sys, time, urllib.request
+import base64, json, os, re, ssl, struct, sys, time, urllib.error, urllib.request
 
 def conf(key):
     if os.environ.get(key):
@@ -15,7 +15,8 @@ BASE = f"{conf('PORTAINER_URL').rstrip('/')}/api/endpoints/{conf('PORTAINER_ENDP
 TOKEN = conf('PORTAINER_ACCESS_TOKEN')
 CTX = ssl._create_unverified_context()
 
-def req(path, body=None, method='GET', timeout=600):
+# Court par défaut : un hôte injoignable (VPN coupé) doit échouer vite ; seul l'exec synchrone attend 10 min
+def req(path, body=None, method='GET', timeout=30):
     r = urllib.request.Request(BASE + path, method=method,
         data=json.dumps(body).encode() if body is not None else None,
         headers={'X-API-Key': TOKEN, 'Content-Type': 'application/json'})
@@ -76,4 +77,7 @@ def main(a):
     else:
         sys.exit(f'portainer-exec: unknown command {cmd}')
 
-main(sys.argv[1:])
+try:
+    main(sys.argv[1:])
+except (urllib.error.URLError, TimeoutError) as e:
+    sys.exit(f'portainer-exec: Portainer injoignable ({getattr(e, "reason", e)}) - VPN ?')
