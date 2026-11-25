@@ -31,7 +31,7 @@ grab list --remote
 
 | Tool | What it does | `grab exec` | Hook |
 |---|---|---|---|
-| **dbc** | Docker-compose DB CLI — auto-detects credentials, opens a shell or runs queries | ✅ | — |
+| **dbsh** | Docker-compose DB CLI — auto-detects credentials, opens a shell or runs queries | ✅ | — |
 | **penpot** | Self-hosted Penpot (Figma alternative) via docker compose | ✅ | ✅ |
 | **anysite-mcp** | Crawl a website's docs into clean `.md` for grepai/ripgrep | ✅ | ✅ |
 | **stripe-cli** | Stripe CLI (webhook listener + event triggers) via Docker | ✅ | ✅ |

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ─── dbc — Docker-compose Database CLI wrapper ───
+# ─── dbsh — Docker-compose Database CLI wrapper ───
 # Opens a DB shell (or runs a query) in the running DB container of a compose project.
 # Credentials are read from the container's environment, so compose has already
 # resolved ${VAR}, .env and env_file for us.
 #
 # Usage:
-#   grab exec dbc                     # interactive shell
-#   grab exec dbc "SELECT 1;"         # run a query
-#   grab exec dbc -f dump.sql         # execute a SQL file (or pipe it on stdin)
-#   grab exec dbc --service mydb      # target a specific compose service
-#   grab exec dbc --compose dev       # use docker-compose.dev.yml (or an exact path)
-#   grab exec dbc --info              # show detected connection info
+#   grab exec dbsh                     # interactive shell
+#   grab exec dbsh "SELECT 1;"         # run a query
+#   grab exec dbsh -f dump.sql         # execute a SQL file (or pipe it on stdin)
+#   grab exec dbsh --service mydb      # target a specific compose service
+#   grab exec dbsh --compose dev       # use docker-compose.dev.yml (or an exact path)
+#   grab exec dbsh --info              # show detected connection info
 
 BOLD='\033[1m'
 DIM='\033[2m'
@@ -21,7 +21,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 die() { echo -e "${RED}error:${NC} $*" >&2; exit 1; }
-info() { echo -e "${CYAN}dbc:${NC} $*" >&2; }
+info() { echo -e "${CYAN}dbsh:${NC} $*" >&2; }
 
 # ─── Resolve --compose: exact path, or a suffix like "dev" ───
 find_compose_file() {
@@ -170,7 +170,7 @@ main() {
     if [[ -n "$sql_file" ]]; then
         exec docker exec "${exec_opts[@]}" "$container" "${cmd[@]}" < "$sql_file"
     fi
-    # TTY only for a real interactive shell, so `cat dump.sql | dbc` works too
+    # TTY only for a real interactive shell, so `cat dump.sql | dbsh` works too
     if [[ -z "$query" && -t 0 && -t 1 ]]; then
         info "Opening interactive ${db_type} shell..."
         exec_opts+=(-t)
@@ -179,10 +179,10 @@ main() {
 }
 
 usage() {
-    echo -e "${BOLD}dbc${NC} — Docker-compose Database CLI wrapper"
+    echo -e "${BOLD}dbsh${NC} — Docker-compose Database CLI wrapper"
     echo ""
     echo -e "${BOLD}USAGE${NC}"
-    echo "  grab exec dbc [options] [query]"
+    echo "  grab exec dbsh [options] [query]"
     echo ""
     echo -e "${BOLD}OPTIONS${NC}"
     echo "  -s, --service <name>    Target a specific compose service"
@@ -192,11 +192,11 @@ usage() {
     echo "  -h, --help              Show this help"
     echo ""
     echo -e "${BOLD}EXAMPLES${NC}"
-    echo "  grab exec dbc                          # interactive DB shell"
-    echo "  grab exec dbc \"SELECT * FROM users;\"   # run a query"
-    echo "  grab exec dbc -f migrations/init.sql   # run a SQL file"
-    echo "  grab exec dbc -s postgres_db           # target specific service"
-    echo "  grab exec dbc --info                   # show connection details"
+    echo "  grab exec dbsh                          # interactive DB shell"
+    echo "  grab exec dbsh \"SELECT * FROM users;\"   # run a query"
+    echo "  grab exec dbsh -f migrations/init.sql   # run a SQL file"
+    echo "  grab exec dbsh -s postgres_db           # target specific service"
+    echo "  grab exec dbsh --info                   # show connection details"
     echo ""
     echo -e "${BOLD}SUPPORTED DATABASES${NC}"
     echo "  PostgreSQL, MySQL, MariaDB, MongoDB (the DB service must be running)"
